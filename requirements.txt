@@ -1,0 +1,10 @@
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+scikit-learn>=1.2.0      # PCA, SVM for unit tests
+faiss-cpu>=1.7.4         # (use faiss-gpu>=1.7.4 if a GPU is available)
+h5py>=3.8.0              # F_core cache
+Pillow>=9.5.0
+tqdm>=4.65.0
+pyyaml>=6.0
+wandb>=0.15.0            # optional logging

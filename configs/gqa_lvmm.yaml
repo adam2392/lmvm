@@ -1,0 +1,35 @@
+# LVMM on GQA + Visual Genome (SPEC §3.2). Real-data experiment.
+dataset: gqa
+mode: lvmm
+
+# Data
+fcore_cache: data/processed/gqa_train_fcore.h5
+val_fcore_cache: data/processed/gqa_val_fcore.h5
+database: checkpoints/gqa_database/
+vg_objects: data/vg/objects.json
+questions: data/gqa/train_balanced_questions.json
+val_questions: data/gqa/val_balanced_questions.json
+min_instances: 30
+image_key_fmt: "{}.jpg"
+
+# Model
+input_dim: 768
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+n_answers: 1843
+question_vocab_size: 3000
+max_q_len: 30
+dropout: 0.1
+
+# Optimization
+lr: 1.0e-4
+weight_decay: 1.0e-2
+batch_size: 64
+epochs: 20
+warmup_frac: 0.05
+grad_clip: 1.0
+seed: 0
+
+output_dir: checkpoints/gqa_lvmm/
