@@ -1,0 +1,33 @@
+# Raw RGB patch baseline on CLEVR (same Transformer size, no filter bank, no database).
+dataset: clevr
+mode: baseline
+
+# Data: each cache entry is [14,14,768] raw 16x16 RGB patch tokens.
+fcore_cache: data/processed/clevr_train_rawpatch.h5
+val_fcore_cache: data/processed/clevr_val_rawpatch.h5
+scene_json: data/clevr/scenes/CLEVR_train_scenes.json
+val_scene_json: data/clevr/scenes/CLEVR_val_scenes.json
+questions: data/clevr/questions/CLEVR_train_questions.json
+val_questions: data/clevr/questions/CLEVR_val_questions.json
+
+# Model: identical visual token dimensionality to the fixed F_core systems.
+input_dim: 768
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+n_answers: 28
+question_vocab_size: 3000
+max_q_len: 30
+dropout: 0.1
+
+# Optimization
+lr: 1.0e-4
+weight_decay: 1.0e-2
+batch_size: 64
+epochs: 30
+warmup_frac: 0.05
+grad_clip: 1.0
+seed: 0
+
+output_dir: checkpoints/rawpatch_baseline/

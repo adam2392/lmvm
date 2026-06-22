@@ -43,8 +43,9 @@ def reasoning_eval(args, device):
     a_vocab = AnswerVocab.load(os.path.join(args.lvmm_vocab_dir, "a_vocab.json"))
     db = VisualKnowledgeDB.load(args.database)
 
-    def make_loader(ckpt_cfg):
-        ds = CLEVRDataset(args.val_fcore_cache, args.val_questions, args.val_scene_json,
+    def make_loader(ckpt_cfg, val_cache=None):
+        cache = val_cache or args.val_fcore_cache
+        ds = CLEVRDataset(cache, args.val_questions, args.val_scene_json,
                           q_vocab, a_vocab, ckpt_cfg.get("max_q_len", 30), limit=args.limit_val)
         return DataLoader(ds, batch_size=args.batch_size, collate_fn=vqa_collate_fn)
 
@@ -60,6 +61,13 @@ def reasoning_eval(args, device):
     base_model, base_cfg = load_system(args.baseline_ckpt, device)
     overall, by_type = evaluate_vqa(base_model, make_loader(base_cfg), device, "baseline", None)
     table["Baseline"] = {"overall": overall, "by_type": by_type}
+
+    if args.rawpatch_ckpt:
+        raw_model, raw_cfg = load_system(args.rawpatch_ckpt, device)
+        raw_cache = args.rawpatch_val_cache or raw_cfg.get("val_fcore_cache")
+        overall, by_type = evaluate_vqa(
+            raw_model, make_loader(raw_cfg, raw_cache), device, "baseline", None)
+        table["RawPatch-Baseline"] = {"overall": overall, "by_type": by_type}
     return table
 
 
@@ -257,9 +265,11 @@ def main():
     ap.add_argument("--memorization", action="store_true")
     ap.add_argument("--lvmm_ckpt", required=True)
     ap.add_argument("--baseline_ckpt", required=True)
+    ap.add_argument("--rawpatch_ckpt")
     ap.add_argument("--lvmm_vocab_dir", required=True)
     ap.add_argument("--database", required=True)
     ap.add_argument("--val_fcore_cache", required=True)
+    ap.add_argument("--rawpatch_val_cache")
     ap.add_argument("--val_questions", required=True)
     ap.add_argument("--val_scene_json", required=True)
     ap.add_argument("--train_fcore_cache")

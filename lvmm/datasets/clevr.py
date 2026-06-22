@@ -81,8 +81,9 @@ class CLEVRDataset(Dataset):
         a_vocab: AnswerVocab,
         max_q_len: int = 30,
         limit: Optional[int] = None,
+        preload_cache: bool = False,
     ):
-        self.cache = FcoreCache(fcore_cache)
+        self.cache = FcoreCache(fcore_cache, preload=preload_cache)
         self.q_vocab = q_vocab
         self.a_vocab = a_vocab
         self.max_q_len = max_q_len

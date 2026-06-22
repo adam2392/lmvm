@@ -5,14 +5,18 @@ Implementation of the LVMM (Latent Visual Memory Model) experiment specified in
 Core** plus an **external Visual Knowledge Database** can reason as well as a fully-learned
 baseline while keeping entity-specific visual knowledge modular and externalized.
 
-Three systems share the identical fixed `F_core` backbone and Transformer architecture and
-differ only in how entity regions are handled:
+Three primary systems share the identical fixed `F_core` backbone and Transformer
+architecture and differ only in how entity regions are handled:
 
 | System        | Entity regions at train time         | At test time            |
 |---------------|--------------------------------------|-------------------------|
 | **LVMM**      | replaced with DB prototypes (inject) | retrieval / oracle / no-DB |
 | **LVMM-NoDB** | (same weights as LVMM)               | raw `F_core` (no DB)    |
 | **Baseline**  | raw `F_core`, learned end-to-end     | raw `F_core`            |
+
+An additional **RawPatch-Baseline** is available to test the value of the fixed filter bank
+itself.  It replaces `F_core` with raw 16×16 RGB patch tokens while keeping the same
+`196 × 768` visual-token shape and the same Transformer size.
 
 ## Layout
 
@@ -31,6 +35,7 @@ scripts/
   build_database.py      Phase 1 — build prototypes + FAISS index
   run_unit_tests.py      FB-A..D (§5.1) and DB-A..D (§5.2) -> JSON reports
   run_evaluation.py      reasoning (§5.3) + memorization (§5.4) tables
+  cache_raw_patches.py   raw RGB patch-token cache for no-filter-bank baseline
 train.py                 Phase 2 — train (--mode lvmm | baseline)
 evaluate.py              single-system VQA accuracy
 tests/                   synthetic dataset generator + integration smoke test
@@ -57,6 +62,10 @@ python scripts/build_filter_bank.py --image_dir data/clevr/images/train --output
 python scripts/cache_fcore.py --image_dir data/clevr/images/train --filter_bank checkpoints/filter_bank/filter_bank.npz --output_file data/processed/clevr_train_fcore.h5
 python scripts/cache_fcore.py --image_dir data/clevr/images/val   --filter_bank checkpoints/filter_bank/filter_bank.npz --output_file data/processed/clevr_val_fcore.h5
 
+# Optional no-filter-bank baseline cache
+python scripts/cache_raw_patches.py --image_dir data/clevr/images/train --output_file data/processed/clevr_train_rawpatch.h5 --stats_output data/processed/rawpatch_stats.npz
+python scripts/cache_raw_patches.py --image_dir data/clevr/images/val   --output_file data/processed/clevr_val_rawpatch.h5   --stats_input data/processed/rawpatch_stats.npz
+
 # 3. Phase 1 — database (use --n_holdout 10 to enable the few-shot test DB-C)
 python scripts/build_database.py --fcore_cache data/processed/clevr_train_fcore.h5 \
     --scene_json data/clevr/scenes/CLEVR_train_scenes.json --output_dir checkpoints/database --n_holdout 10
@@ -70,6 +79,7 @@ python scripts/run_unit_tests.py --phase database --database checkpoints/databas
 # 5. Phase 2 — train both systems
 python train.py --mode lvmm     --config configs/clevr_lvmm.yaml
 python train.py --mode baseline --config configs/clevr_baseline.yaml
+python train.py --mode baseline --config configs/clevr_rawpatch_baseline.yaml
 
 # 6. Evaluation -> results/clevr_results.json
 python scripts/run_evaluation.py --reasoning --memorization \
@@ -83,6 +93,9 @@ python scripts/run_evaluation.py --reasoning --memorization \
     --filter_bank checkpoints/filter_bank/filter_bank.npz \
     --val_image_dir data/clevr/images/val
 ```
+
+For high-utilization commands on Google Cloud A100 VMs, see
+[`docs/gcp_a100_runbook.md`](docs/gcp_a100_runbook.md).
 
 ## Quick integration test (no dataset download)
 
